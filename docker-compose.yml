@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: agri_detect_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-agridetect}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - agri_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: agri_detect_api
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db/agridetect
+      - API_KEY=${API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-SUPER_SECRET_CHANGE_ME}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - agri_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # Frontend Nginx Service (includes the Build)
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: agri_detect_web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - agri_network
+
+networks:
+  agri_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
