@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { AnalyticsData } from '../types';
+import { AnalyticsData, MapPoint } from '../types';
+import DiseaseMap from './DiseaseMap';
 
 const data: AnalyticsData[] = [
   { time: '06:00', moisture: 45, temperature: 18, nitrogen: 80 },
@@ -10,6 +11,14 @@ const data: AnalyticsData[] = [
   { time: '15:00', moisture: 35, temperature: 30, nitrogen: 68 },
   { time: '18:00', moisture: 40, temperature: 25, nitrogen: 72 },
   { time: '21:00', moisture: 44, temperature: 20, nitrogen: 78 },
+];
+
+const mapPoints: MapPoint[] = [
+  { id: '1', lat: 38.3000, lng: -122.2900, disease: 'Tomato Blight', severity: 'high', date: '2024-03-24' },
+  { id: '2', lat: 38.3050, lng: -122.2850, disease: 'Potato Blight', severity: 'medium', date: '2024-03-23' },
+  { id: '3', lat: 38.2950, lng: -122.3000, disease: 'Healthy Corn', severity: 'low', date: '2024-03-22' },
+  { id: '4', lat: 38.2900, lng: -122.2800, disease: 'Apple Scab', severity: 'high', date: '2024-03-21' },
+  { id: '5', lat: 38.3100, lng: -122.3100, disease: 'Grape Black Rot', severity: 'medium', date: '2024-03-24' },
 ];
 
 const StatCard = ({ label, value, unit, trend, color }: any) => (
@@ -32,14 +41,17 @@ const StatCard = ({ label, value, unit, trend, color }: any) => (
 
 const Dashboard: React.FC = () => {
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn pb-12">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Farm Overview</h2>
-          <p className="text-slate-500">Real-time sensor data and analytics</p>
+          <p className="text-slate-500">Real-time spatio-temporal analytics</p>
         </div>
-        <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
-          Download Report
+        <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export Dataset
         </button>
       </div>
 
@@ -48,6 +60,22 @@ const Dashboard: React.FC = () => {
         <StatCard label="Temperature" value="24" unit="°C" trend={2} color="bg-orange-500" />
         <StatCard label="Nitrogen Level" value="78" unit="mg/kg" trend={12} color="bg-emerald-500" />
         <StatCard label="Healthy Crops" value="94" unit="%" trend={1.5} color="bg-purple-500" />
+      </div>
+
+      {/* Disease Heatmap Section */}
+      <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden p-1">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Pathogen Spread Analysis</h3>
+            <p className="text-slate-500 text-sm">Real-time geographic distribution of detected crop diseases.</p>
+          </div>
+          <div className="flex items-center gap-2">
+             <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold uppercase tracking-wider">Live Map</div>
+          </div>
+        </div>
+        <div className="h-[500px] w-full">
+          <DiseaseMap points={mapPoints} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -13,6 +13,8 @@ export interface DetectionResult {
   description: string;
   treatment: string[];
   severity: 'low' | 'medium' | 'high';
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface AnalyticsData {
@@ -20,4 +22,13 @@ export interface AnalyticsData {
   moisture: number;
   temperature: number;
   nitrogen: number;
+}
+
+export interface MapPoint {
+  id: string;
+  lat: number;
+  lng: number;
+  disease: string;
+  severity: 'low' | 'medium' | 'high';
+  date: string;
 }

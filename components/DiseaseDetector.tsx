@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { AgriDetectService } from '../services/geminiService';
 import { DetectionResult } from '../types';
 
@@ -9,16 +9,32 @@ const DiseaseDetector: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Request location when component mounts or image is selected
+  useEffect(() => {
+    if (selectedImage && !userLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          });
+        },
+        (err) => {
+          console.warn("Location access denied or unavailable", err);
+        }
+      );
+    }
+  }, [selectedImage, userLocation]);
+
   const validateAndProcessFile = (file: File) => {
-    // 1. Validate File Type
     if (!file.type.startsWith('image/')) {
       setError("Please upload a valid image file (JPG, PNG).");
       return;
     }
 
-    // 2. Validate File Size (Max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       setError("Image size exceeds 10MB limit.");
       return;
@@ -75,7 +91,12 @@ const DiseaseDetector: React.FC = () => {
       const service = new AgriDetectService();
       const detectionResult = await service.detectDisease(selectedImage);
       if (detectionResult) {
-        setResult(detectionResult);
+        // Append geographic data to the result
+        setResult({
+          ...detectionResult,
+          latitude: userLocation?.lat,
+          longitude: userLocation?.lng
+        });
       } else {
         throw new Error("The AI model was unable to generate a diagnosis. Please try a clearer photo.");
       }
@@ -160,6 +181,21 @@ const DiseaseDetector: React.FC = () => {
             />
           </div>
 
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${userLocation ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Geo-Tag Status</p>
+              <p className="text-sm font-bold text-slate-900">
+                {userLocation ? `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}` : 'Requesting Coordinates...'}
+              </p>
+            </div>
+          </div>
+
           <button
             onClick={runDetection}
             disabled={!selectedImage || isDetecting}
@@ -174,14 +210,14 @@ const DiseaseDetector: React.FC = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Analyzing Neural Patterns...
+                Syncing Neural Engine...
               </>
             ) : (
               <>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04m17.236 0a11.959 11.959 0 01-1.127 5.733 11.959 11.959 0 01-3.33 4.192 11.959 11.959 0 01-4.192 3.33 11.959 11.959 0 01-5.733 1.127 11.959 11.959 0 01-5.733-1.127 11.959 11.959 0 01-4.192-3.33 11.959 11.959 0 01-3.33-4.192 11.959 11.959 0 01-1.127-5.733 11.955 11.955 0 018.618-3.04c2.628 0 5.087.844 7.088 2.28" />
                 </svg>
-                Launch Diagnosis
+                Launch Analysis
               </>
             )}
           </button>
@@ -190,7 +226,6 @@ const DiseaseDetector: React.FC = () => {
         {/* Results Column */}
         <div className="lg:col-span-7 h-full">
           <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl p-8 lg:p-10 h-full flex flex-col relative overflow-hidden">
-            {/* Shimmer loading for results */}
             {isDetecting && (
               <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm p-10 space-y-8 animate-pulse">
                 <div className="h-8 bg-slate-200 rounded-lg w-1/3"></div>
@@ -244,11 +279,16 @@ const DiseaseDetector: React.FC = () => {
                 </div>
 
                 <div className="bg-slate-50 border border-slate-100 p-6 rounded-[2rem] relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 text-slate-900">
                     <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                   </div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Clinical Summary</h4>
                   <p className="text-slate-700 leading-relaxed relative z-10">{result.description}</p>
+                  {result.latitude && (
+                    <p className="text-[10px] mt-4 font-mono text-emerald-600 bg-white inline-block px-2 py-1 rounded-md border border-emerald-100">
+                      GEO-TAG: {result.latitude.toFixed(6)}, {result.longitude?.toFixed(6)}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex-1 space-y-6">
@@ -292,17 +332,6 @@ const DiseaseDetector: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-        .animate-shake {
-          animation: shake 0.4s ease-in-out;
-        }
-      `}</style>
     </div>
   );
 };
