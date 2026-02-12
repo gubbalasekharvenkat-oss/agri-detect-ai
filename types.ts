@@ -15,6 +15,10 @@ export interface DetectionResult {
   severity: 'low' | 'medium' | 'high';
   latitude?: number;
   longitude?: number;
+  // Multilingual Support
+  regionalName?: string;
+  regionalDescription?: string;
+  regionalTreatment?: string[];
 }
 
 export interface AnalyticsData {

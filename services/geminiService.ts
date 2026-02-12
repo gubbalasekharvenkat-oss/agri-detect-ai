@@ -16,7 +16,7 @@ export class AgriDetectService {
       contents: [
         {
           parts: [
-            { text: "Analyze this agricultural plant image. Identify any diseases or deficiencies. Provide details in JSON format." },
+            { text: "Analyze this agricultural plant image. Identify any diseases or deficiencies. Provide details in JSON format. Include a high-quality Spanish translation (Regional Language) for the disease name, description, and treatment steps." },
             {
               inlineData: {
                 mimeType: "image/jpeg",
@@ -38,15 +38,23 @@ export class AgriDetectService {
               type: Type.ARRAY,
               items: { type: Type.STRING }
             },
-            severity: { type: Type.STRING, description: "low, medium, high" }
+            severity: { type: Type.STRING, description: "low, medium, high" },
+            // Regional Language (Spanish)
+            regionalName: { type: Type.STRING },
+            regionalDescription: { type: Type.STRING },
+            regionalTreatment: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
           },
-          required: ["diseaseName", "confidence", "description", "treatment", "severity"]
+          required: ["diseaseName", "confidence", "description", "treatment", "severity", "regionalName", "regionalDescription", "regionalTreatment"]
         }
       }
     });
 
     try {
-      return JSON.parse(response.text || '{}');
+      const text = response.text;
+      return JSON.parse(text || '{}');
     } catch (e) {
       console.error("Failed to parse Gemini response", e);
       return null;
