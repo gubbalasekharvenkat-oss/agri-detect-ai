@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
+import { UserRole } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  userRole?: UserRole;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, userRole = 'user' }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -23,12 +25,15 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
   }, []);
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'detection', label: 'AI Detection', icon: '🔍' },
-    { id: 'history', label: 'History', icon: '📜' },
-    { id: 'architecture', label: 'Architecture', icon: '🏗️' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊', roles: ['user', 'admin'] },
+    { id: 'admin', label: 'Admin Panel', icon: '🛡️', roles: ['admin'] },
+    { id: 'detection', label: 'AI Detection', icon: '🔍', roles: ['user', 'admin'] },
+    { id: 'history', label: 'History', icon: '📜', roles: ['user', 'admin'] },
+    { id: 'architecture', label: 'Architecture', icon: '🏗️', roles: ['user', 'admin'] },
+    { id: 'settings', label: 'Settings', icon: '⚙️', roles: ['user', 'admin'] },
   ];
+
+  const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
@@ -49,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           </div>
 
           <nav className="space-y-1 flex-1">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {
@@ -78,10 +83,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
             )}
             
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-600/20">JD</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg ${userRole === 'admin' ? 'bg-purple-600' : 'bg-emerald-600'}`}>
+                {userRole === 'admin' ? 'AD' : 'JD'}
+              </div>
               <div>
-                <p className="text-sm font-bold text-white">John Doe</p>
-                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Pro Account</p>
+                <p className="text-sm font-bold text-white">{userRole === 'admin' ? 'Admin User' : 'John Doe'}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${userRole === 'admin' ? 'text-purple-400' : 'text-emerald-500'}`}>
+                  {userRole} Account
+                </p>
               </div>
             </div>
           </div>
@@ -110,7 +119,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
               </span>
               <input 
                 type="text" 
-                placeholder="Search reports..." 
+                placeholder="Search resources..." 
                 className="w-full pl-11 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/50 transition-all outline-none"
               />
             </div>

@@ -7,6 +7,8 @@ export interface ProjectNode {
   description?: string;
 }
 
+export type UserRole = 'user' | 'admin';
+
 export interface DetectionResult {
   diseaseName: string;
   confidence: number;
@@ -35,4 +37,17 @@ export interface MapPoint {
   disease: string;
   severity: 'low' | 'medium' | 'high';
   date: string;
+}
+
+export interface ModelMetric {
+  version: string;
+  precision: number;
+  recall: number;
+  f1: number;
+  date: string;
+}
+
+export interface DiseaseStat {
+  name: string;
+  count: number;
 }

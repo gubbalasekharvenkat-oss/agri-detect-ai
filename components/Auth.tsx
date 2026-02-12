@@ -3,20 +3,21 @@ import React, { useState } from 'react';
 
 interface AuthProps {
   type: 'login' | 'register';
-  onSuccess: () => void;
+  onSuccess: (email: string) => void;
   onSwitch: () => void;
   onBack: () => void;
 }
 
 const Auth: React.FC<AuthProps> = ({ type, onSuccess, onSwitch, onBack }) => {
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onSuccess();
+      onSuccess(email);
     }, 1200);
   };
 
@@ -34,8 +35,10 @@ const Auth: React.FC<AuthProps> = ({ type, onSuccess, onSwitch, onBack }) => {
           <h2 className="text-3xl font-bold text-slate-900 mb-2">
             {type === 'login' ? 'Welcome Back' : 'Join AgriDetect'}
           </h2>
-          <p className="text-slate-500 mb-8">
-            {type === 'login' ? 'Access your farm dashboard and AI detection tools.' : 'Create an account to start monitoring your crops.'}
+          <p className="text-slate-500 mb-8 text-sm">
+            {type === 'login' 
+              ? 'Access your farm dashboard. Tip: user "admin" in email for admin view.' 
+              : 'Create an account to start monitoring your crops.'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -55,6 +58,8 @@ const Auth: React.FC<AuthProps> = ({ type, onSuccess, onSwitch, onBack }) => {
               <input 
                 type="email" 
                 required 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                 placeholder="john@farm.com"
               />

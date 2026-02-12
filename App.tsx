@@ -7,26 +7,37 @@ import FolderTree from './components/FolderTree';
 import Landing from './components/Landing';
 import Auth from './components/Auth';
 import History from './components/History';
+import AdminDashboard from './components/AdminDashboard';
+import { UserRole } from './types';
 
 type AppState = 'landing' | 'login' | 'register' | 'app';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>('landing');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [userRole, setUserRole] = useState<UserRole>('user');
 
   // Simple auth simulation persistence
   useEffect(() => {
     const isAuth = localStorage.getItem('agri_auth');
-    if (isAuth) setAppState('app');
+    const role = localStorage.getItem('agri_role') as UserRole;
+    if (isAuth) {
+      setAppState('app');
+      if (role) setUserRole(role);
+    }
   }, []);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (email: string) => {
     localStorage.setItem('agri_auth', 'true');
+    const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
+    localStorage.setItem('agri_role', role);
+    setUserRole(role);
     setAppState('app');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('agri_auth');
+    localStorage.removeItem('agri_role');
     setAppState('landing');
   };
 
@@ -41,7 +52,7 @@ const App: React.FC = () => {
     return (
       <Auth 
         type={appState} 
-        onSuccess={handleLoginSuccess}
+        onSuccess={(email) => handleLoginSuccess(email)}
         onSwitch={() => setAppState(appState === 'login' ? 'register' : 'login')}
         onBack={() => setAppState('landing')}
       />
@@ -52,6 +63,8 @@ const App: React.FC = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
+      case 'admin':
+        return <AdminDashboard />;
       case 'detection':
         return <DiseaseDetector />;
       case 'architecture':
@@ -67,6 +80,7 @@ const App: React.FC = () => {
             </svg>
             <h2 className="text-xl font-bold text-slate-900">System Configuration</h2>
             <p className="mt-1">Manage API keys, user permissions, and sensor nodes.</p>
+            <p className="mt-2 text-xs text-slate-400">Current Role: <span className="uppercase font-bold text-emerald-600">{userRole}</span></p>
             <button 
               onClick={handleLogout}
               className="mt-6 px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors"
@@ -81,7 +95,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole}>
       <div className="max-w-7xl mx-auto">
         {renderContent()}
       </div>
