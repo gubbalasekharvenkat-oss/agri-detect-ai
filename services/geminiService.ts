@@ -1,31 +1,27 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
 export class AgriDetectService {
-  private ai: GoogleGenAI;
-
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: API_KEY || '' });
-  }
-
+  /**
+   * Analyzes an agricultural plant image using Gemini.
+   * Strictly follows @google/genai initialization and content extraction guidelines.
+   */
   async detectDisease(imageBase64: string): Promise<any> {
-    const response = await this.ai.models.generateContent({
+    // Fix: Initialize GoogleGenAI instance inside the method using named parameters and process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [
-        {
-          parts: [
-            { text: "Analyze this agricultural plant image. Identify any diseases or deficiencies. Provide details in JSON format. Include a high-quality Spanish translation (Regional Language) for the disease name, description, and treatment steps." },
-            {
-              inlineData: {
-                mimeType: "image/jpeg",
-                data: imageBase64.split(',')[1] || imageBase64
-              }
+      contents: {
+        parts: [
+          { text: "Analyze this agricultural plant image. Identify any diseases or deficiencies. Provide details in JSON format. Include a high-quality Spanish translation (Regional Language) for the disease name, description, and treatment steps." },
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: imageBase64.split(',')[1] || imageBase64
             }
-          ]
-        }
-      ],
+          }
+        ]
+      },
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -53,6 +49,7 @@ export class AgriDetectService {
     });
 
     try {
+      // Fix: Access response.text property directly as per latest SDK guidelines
       const text = response.text;
       return JSON.parse(text || '{}');
     } catch (e) {
