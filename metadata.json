@@ -2,6 +2,7 @@
   "name": "Agri Detect AI - Production Architecture",
   "description": "A comprehensive enterprise-grade agricultural detection platform featuring disease diagnosis, soil analytics, and a full-stack architectural blueprint.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "geolocation"
   ]
 }
