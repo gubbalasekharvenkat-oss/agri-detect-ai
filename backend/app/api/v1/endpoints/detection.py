@@ -9,7 +9,7 @@ from ...db.session import get_db
 from ...core.security import get_current_user
 from ...models.models import User, Detection
 from ...schemas.schemas import DetectionResponse
-from ...services.ai_service import ai_service
+from ...services.ai_service import model_manager
 
 router = APIRouter()
 
@@ -30,11 +30,13 @@ async def create_detection(
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
     
     content = await file.read()
+    
+    # Save the file for historical reference
     with open(file_path, "wb") as f:
         f.write(content)
     
-    # 2. Perform AI Inference
-    prediction = await ai_service.predict_disease(content)
+    # 2. Perform Real AI Inference via TensorFlow
+    prediction = await model_manager.predict(content)
     
     # 3. Store in PostgreSQL via SQLAlchemy
     db_detection = Detection(
@@ -59,7 +61,10 @@ async def get_detection_history(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Simplified query for brevity
     from sqlalchemy import select
-    result = await db.execute(select(Detection).where(Detection.user_id == current_user.id))
+    result = await db.execute(
+        select(Detection)
+        .where(Detection.user_id == current_user.id)
+        .order_by(Detection.created_at.desc())
+    )
     return result.scalars().all()
